@@ -1,0 +1,22 @@
+server:
+  port: 8081      # Resource Server(8080)와 분리
+
+spring:
+  main:
+    web-application-type: servlet   # Tomcat 활성 (HTTP transport)
+    banner-mode: console            # HTTP 모드에선 배너 OK (stdout JSON-RPC X)
+  ai:
+    mcp:
+      server:
+        name: todo-mcp-server-org
+        version: 0.0.1
+        type: SYNC
+        # stdio 키 없음 — HTTP/SSE가 starter의 다른 활성 경로
+
+logging:
+  level:
+    root: INFO
+    com.example.orgmcp: DEBUG
+
+resource-server:
+  base-url: http://localhost:8080
