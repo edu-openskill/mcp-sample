@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "todo-org-bob": {
+      "url": "http://localhost:8081/sse",
+      "headers": {
+        "Authorization": "Bearer bob-token"
+      }
+    }
+  }
+}

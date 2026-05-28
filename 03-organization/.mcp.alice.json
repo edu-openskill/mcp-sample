@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "todo-org-alice": {
+      "url": "http://localhost:8081/sse",
+      "headers": {
+        "Authorization": "Bearer alice-token"
+      }
+    }
+  }
+}
