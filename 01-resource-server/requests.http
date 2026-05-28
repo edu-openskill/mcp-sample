@@ -1,0 +1,35 @@
+### list (empty at start)
+GET http://localhost:8080/todos
+
+### add
+POST http://localhost:8080/todos
+Content-Type: application/json
+
+{
+  "title": "Learn MCP",
+  "memo": "1차시 강의"
+}
+
+### add another
+POST http://localhost:8080/todos
+Content-Type: application/json
+
+{
+  "title": "Write slides",
+  "memo": "Marp"
+}
+
+### list again
+GET http://localhost:8080/todos
+
+### get by id
+GET http://localhost:8080/todos/1
+
+### search
+GET http://localhost:8080/todos/search?q=mcp
+
+### complete
+PATCH http://localhost:8080/todos/1/complete
+
+### get missing
+GET http://localhost:8080/todos/999
