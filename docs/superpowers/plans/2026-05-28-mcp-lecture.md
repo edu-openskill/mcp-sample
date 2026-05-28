@@ -489,10 +489,13 @@ Create `01-resource-server/src/test/java/com/example/resource/TodoControllerTest
 ```java
 package com.example.resource;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -500,6 +503,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
 class TodoControllerTest {
 
     @Autowired
@@ -514,33 +518,33 @@ class TodoControllerTest {
 
     @Test
     void addAndGet_roundTrip() throws Exception {
-        String created = mvc.perform(post("/todos")
+        mvc.perform(post("/todos")
                         .contentType("application/json")
                         .content("""
                                 {"title": "Learn MCP", "memo": "today"}
                                 """))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.title").value("Learn MCP"))
-                .andExpect(jsonPath("$.completed").value(false))
-                .andReturn().getResponse().getContentAsString();
-
-        // 단순히 ID가 발급됐는지만 확인 (다른 테스트와의 순서 의존 회피)
+                .andExpect(jsonPath("$.completed").value(false));
     }
 
     @Test
-    void completeFlow() throws Exception {
-        mvc.perform(post("/todos")
+    void completeFlow_marksCompleted() throws Exception {
+        String body = mvc.perform(post("/todos")
                         .contentType("application/json")
                         .content("""
                                 {"title": "to complete", "memo": "x"}
                                 """))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
 
-        // 가장 최근 ID로 완료 처리
-        mvc.perform(get("/todos"))
+        long id = new ObjectMapper().readTree(body).get("id").asLong();
+
+        mvc.perform(patch("/todos/{id}/complete", id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$.id").value(id))
+                .andExpect(jsonPath("$.completed").value(true));
     }
 
     @Test
@@ -572,6 +576,7 @@ Create `01-resource-server/src/main/java/com/example/resource/TodoController.jav
 ```java
 package com.example.resource;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -600,6 +605,7 @@ public class TodoController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Todo add(@RequestBody AddRequest request) {
         return repository.add(request.title(), request.memo());
     }
@@ -612,7 +618,7 @@ public class TodoController {
     }
 
     @GetMapping("/search")
-    public List<Todo> search(@RequestParam("q") String query) {
+    public List<Todo> search(@RequestParam(value = "q", required = false) String query) {
         return repository.search(query);
     }
 

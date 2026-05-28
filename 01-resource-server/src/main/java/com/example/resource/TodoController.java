@@ -1,5 +1,6 @@
 package com.example.resource;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +29,7 @@ public class TodoController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Todo add(@RequestBody AddRequest request) {
         return repository.add(request.title(), request.memo());
     }
@@ -40,7 +42,7 @@ public class TodoController {
     }
 
     @GetMapping("/search")
-    public List<Todo> search(@RequestParam("q") String query) {
+    public List<Todo> search(@RequestParam(value = "q", required = false) String query) {
         return repository.search(query);
     }
 

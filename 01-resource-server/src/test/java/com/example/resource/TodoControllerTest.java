@@ -1,5 +1,6 @@
 package com.example.resource;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -28,33 +29,33 @@ class TodoControllerTest {
 
     @Test
     void addAndGet_roundTrip() throws Exception {
-        String created = mvc.perform(post("/todos")
+        mvc.perform(post("/todos")
                         .contentType("application/json")
                         .content("""
                                 {"title": "Learn MCP", "memo": "today"}
                                 """))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.title").value("Learn MCP"))
-                .andExpect(jsonPath("$.completed").value(false))
-                .andReturn().getResponse().getContentAsString();
-
-        // 단순히 ID가 발급됐는지만 확인 (다른 테스트와의 순서 의존 회피)
+                .andExpect(jsonPath("$.completed").value(false));
     }
 
     @Test
     void completeFlow() throws Exception {
-        mvc.perform(post("/todos")
+        String body = mvc.perform(post("/todos")
                         .contentType("application/json")
                         .content("""
                                 {"title": "to complete", "memo": "x"}
                                 """))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
 
-        // 가장 최근 ID로 완료 처리
-        mvc.perform(get("/todos"))
+        long id = new ObjectMapper().readTree(body).get("id").asLong();
+
+        mvc.perform(patch("/todos/{id}/complete", id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$.id").value(id))
+                .andExpect(jsonPath("$.completed").value(true));
     }
 
     @Test
