@@ -772,6 +772,7 @@ dependencyManagement {
 
 dependencies {
     implementation("org.springframework.ai:spring-ai-starter-mcp-server")
+    implementation("io.modelcontextprotocol.sdk:mcp-spring-webmvc:0.10.0")  // HTTP/SSE transport (transitively `optional`, must declare)
     implementation("org.springframework.boot:spring-boot-starter-web")  // RestClient + Tomcat
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -815,7 +816,11 @@ resource-server:
   base-url: http://localhost:8080
 ```
 
-> **HTTP transport 설정 검증 메모**: Spring AI 1.0.3 MCP server starter는 stdio와 HTTP/SSE 둘 다 지원. `spring.ai.mcp.server.stdio: true`가 없으면 HTTP/SSE 모드가 활성. 정확한 SSE 엔드포인트 경로(`/sse` 또는 `/mcp`)는 빌드 후 server 로그로 확인. 만약 추가 키(`spring.ai.mcp.server.sse.message-endpoint` 등)가 필요하면 implementer가 Spring AI docs를 확인 후 application.yml에 추가하고 plan을 갱신.
+> **HTTP/SSE transport — Phase B 검증 결과** (Spring AI 1.0.3):
+> - 의존성 `io.modelcontextprotocol.sdk:mcp-spring-webmvc:0.10.0` **반드시 명시** (transitive `optional`이라 자동 안 들어옴 → 없으면 endpoint 404)
+> - 엔드포인트: `GET /sse` (long-lived, sessionId 발급) → 후속 `POST /mcp/message?sessionId=<uuid>` (실제 JSON-RPC)
+> - 기본 path 변경 키: `spring.ai.mcp.server.sse-endpoint`, `sse-message-endpoint`
+> - HandlerInterceptor가 MVC chain에서 fire — `AuthForwardInterceptor` 동작 OK (e2e에서 최종 검증)
 
 - [ ] **Step 5: McpServerApplication**
 
