@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "todo-external": {
+      "command": "java",
+      "args": [
+        "-jar",
+        "C:\\Users\\G\\workspace\\mcp-exam\\02-external\\mcp-server\\build\\libs\\mcp-server-external.jar"
+      ]
+    }
+  }
+}
