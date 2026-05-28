@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "todo": {
+      "command": "java",
+      "args": [
+        "-jar",
+        "C:\\Users\\G\\workspace\\mcp-exam\\02-mcp-server\\build\\libs\\mcp-server.jar"
+      ]
+    }
+  }
+}
