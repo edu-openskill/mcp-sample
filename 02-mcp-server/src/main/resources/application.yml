@@ -1,0 +1,25 @@
+spring:
+  main:
+    web-application-type: none      # stdio 모드 — HTTP 서버 띄우지 않음
+    banner-mode: off                # stdout을 JSON-RPC로 깨끗하게
+  ai:
+    mcp:
+      server:
+        name: todo-mcp-server
+        version: 0.0.1
+        type: SYNC
+        stdio: true                 # stdio transport 활성화 (기본값 false)
+
+# 자식 프로세스 stdout은 JSON-RPC 전용. 로그는 파일로.
+logging:
+  file:
+    name: ./logs/mcp-server.log
+  pattern:
+    console: ""
+  level:
+    root: INFO
+    com.example.mcp: DEBUG
+
+# Resource Server 위치 (Task 7에서 사용)
+resource-server:
+  base-url: http://localhost:8080
