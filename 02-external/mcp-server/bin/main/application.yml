@@ -1,0 +1,23 @@
+spring:
+  main:
+    web-application-type: none      # stdio 모드
+    banner-mode: off
+  ai:
+    mcp:
+      server:
+        name: todo-mcp-server-external
+        version: 0.0.1
+        type: SYNC
+        stdio: true
+
+logging:
+  file:
+    name: ./logs/mcp-server-external.log
+  pattern:
+    console: ""
+  level:
+    root: INFO
+    com.example.external: DEBUG
+
+jsonplaceholder:
+  base-url: https://jsonplaceholder.typicode.com

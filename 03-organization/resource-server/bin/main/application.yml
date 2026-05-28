@@ -1,0 +1,10 @@
+server:
+  port: 8080      # 01-personal과 같은 포트 — 동시에 띄우려면 한 시나리오만 활성
+
+spring:
+  application:
+    name: resource-server-org
+
+logging:
+  level:
+    com.example.org: DEBUG

@@ -4,8 +4,9 @@
       "command": "java",
       "args": [
         "-jar",
-        "/ABSOLUTE/PATH/TO/mcp-sample/01-personal/mcp-server/build/libs/mcp-server.jar"
-      ]
+        "C:/Users/ssarm/workspace/mcp-sample/01-personal/mcp-server/build/libs/mcp-server.jar"
+      ],
+      "_comment": "상대경로도 가능. 이 .mcp.json이 있는 프로젝트 루트(01-personal/) 기준으로 해석된다. 예: \"mcp-server/build/libs/mcp-server.jar\". 단, Claude Code를 다른 디렉터리에서 실행하면 cwd가 달라져 깨질 수 있으니 팀 공유용은 절대경로가 안전. (※ JSON은 // 주석 미지원 → 이 _comment 필드는 파서가 무시하는 더미 키)"
     }
   }
 }
