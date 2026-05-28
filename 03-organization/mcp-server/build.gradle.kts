@@ -26,6 +26,7 @@ dependencyManagement {
 dependencies {
     implementation("org.springframework.ai:spring-ai-starter-mcp-server")
     implementation("org.springframework.boot:spring-boot-starter-web")  // RestClient + Tomcat
+    implementation("io.modelcontextprotocol.sdk:mcp-spring-webmvc:0.10.0")  // WebMvcSseServerTransportProvider (optional in spring-ai-mcp, must be explicit)
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
