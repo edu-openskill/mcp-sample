@@ -52,7 +52,7 @@ mcp-exam/
 │       ├── main/java/com/example/mcp/
 │       │   ├── McpServerApplication.java
 │       │   ├── TodoRestClient.java        # → 01-resource-server 호출
-│       │   ├── TodoTools.java             # @McpTool 5개
+│       │   ├── TodoTools.java             # @Tool 5개 (Spring AI 1.0.3)
 │       │   └── TodoView.java              # MCP에 노출할 가벼운 DTO
 │       ├── main/resources/application.yml # stdio transport 설정
 │       └── test/java/com/example/mcp/
@@ -783,7 +783,7 @@ dependencyManagement {
 
 dependencies {
     implementation("org.springframework.ai:spring-ai-starter-mcp-server")
-    implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-web")  // RestClient용. web-application-type: none 으로 Tomcat은 끔
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
@@ -807,13 +807,23 @@ Create `02-mcp-server/src/main/java/com/example/mcp/McpServerApplication.java`:
 ```java
 package com.example.mcp;
 
+import org.springframework.ai.tool.ToolCallbackProvider;
+import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 public class McpServerApplication {
     public static void main(String[] args) {
         SpringApplication.run(McpServerApplication.class, args);
+    }
+
+    // Spring AI 1.0.3에서 @Tool 어노테이션 메서드를 MCP tool로 노출하려면
+    // MethodToolCallbackProvider를 빈으로 등록해야 함. (어노테이션 자동 스캔 X)
+    @Bean
+    public ToolCallbackProvider todoToolCallbacks(TodoTools todoTools) {
+        return MethodToolCallbackProvider.builder().toolObjects(todoTools).build();
     }
 }
 ```
@@ -833,8 +843,7 @@ spring:
         name: todo-mcp-server
         version: 0.0.1
         type: SYNC
-        annotation-scanner:
-          enabled: true             # @McpTool 자동 스캔
+        stdio: true                 # stdio transport 활성화 (기본값 false)
 
 # 자식 프로세스 stdout은 JSON-RPC 전용. 로그는 파일로.
 logging:
@@ -982,7 +991,7 @@ git commit -m "mcp: add TodoRestClient calling resource server"
 
 ---
 
-## Task 8: TodoTools — @McpTool 5개 (TDD)
+## Task 8: TodoTools — @Tool 5개 (TDD)
 
 **Files:**
 - Create: `02-mcp-server/src/main/java/com/example/mcp/TodoTools.java`
@@ -1098,15 +1107,15 @@ Mockito는 `spring-boot-starter-test`에 포함되어 있으므로 별도 추가
 
 Expected: 컴파일 에러 — `TodoTools`, `TodoTools.GetResult`, `TodoTools.CompleteResult` 클래스 없음.
 
-- [ ] **Step 4: `TodoTools` 작성 (@McpTool 5개)**
+- [ ] **Step 4: `TodoTools` 작성 (@Tool 5개)**
 
 Create `02-mcp-server/src/main/java/com/example/mcp/TodoTools.java`:
 
 ```java
 package com.example.mcp;
 
-import org.springframework.ai.mcp.server.annotation.McpTool;
-import org.springframework.ai.mcp.server.annotation.McpToolParam;
+import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -1120,37 +1129,37 @@ public class TodoTools {
         this.restClient = restClient;
     }
 
-    @McpTool(name = "list_todos", description = "모든 할일(Todo) 목록을 반환합니다.")
+    @Tool(name = "list_todos", description = "모든 할일(Todo) 목록을 반환합니다.")
     public List<TodoView> listTodos() {
         return restClient.list();
     }
 
-    @McpTool(name = "get_todo", description = "ID로 할일 한 건을 조회합니다.")
+    @Tool(name = "get_todo", description = "ID로 할일 한 건을 조회합니다.")
     public GetResult getTodo(
-            @McpToolParam(description = "할일 ID", required = true) Long id) {
+            @ToolParam(description = "할일 ID", required = true) Long id) {
         return restClient.get(id)
                 .map(t -> new GetResult(true, t))
                 .orElseGet(() -> new GetResult(false, null));
     }
 
-    @McpTool(name = "add_todo", description = "새 할일을 추가합니다. memo는 선택입니다.")
+    @Tool(name = "add_todo", description = "새 할일을 추가합니다. memo는 선택입니다.")
     public TodoView addTodo(
-            @McpToolParam(description = "제목", required = true) String title,
-            @McpToolParam(description = "메모(선택)", required = false) String memo) {
+            @ToolParam(description = "제목", required = true) String title,
+            @ToolParam(description = "메모(선택)", required = false) String memo) {
         return restClient.add(title, memo);
     }
 
-    @McpTool(name = "complete_todo", description = "ID에 해당하는 할일을 완료 처리합니다.")
+    @Tool(name = "complete_todo", description = "ID에 해당하는 할일을 완료 처리합니다.")
     public CompleteResult completeTodo(
-            @McpToolParam(description = "할일 ID", required = true) Long id) {
+            @ToolParam(description = "할일 ID", required = true) Long id) {
         return restClient.complete(id)
                 .map(t -> new CompleteResult(true, t))
                 .orElseGet(() -> new CompleteResult(false, null));
     }
 
-    @McpTool(name = "search_todos", description = "제목과 메모에서 키워드를 포함하는 할일을 검색합니다.")
+    @Tool(name = "search_todos", description = "제목과 메모에서 키워드를 포함하는 할일을 검색합니다.")
     public List<TodoView> searchTodos(
-            @McpToolParam(description = "검색 키워드", required = true) String query) {
+            @ToolParam(description = "검색 키워드", required = true) String query) {
         return restClient.search(query);
     }
 
@@ -1159,7 +1168,7 @@ public class TodoTools {
 }
 ```
 
-> **버전 확인 메모**: `org.springframework.ai.mcp.server.annotation.McpTool`의 패키지 경로는 Spring AI 1.0.x 기준. 실제 빌드 시 import가 풀리지 않으면 IDE 자동 import로 확인 후 정정.
+> **Spring AI 1.0.3 주의**: tool 노출 어노테이션은 `@Tool` / `@ToolParam` (패키지 `org.springframework.ai.tool.annotation`). 강의에서 "MCP 전용 어노테이션이 아니라 Spring AI의 일반 tool 어노테이션 위에 MCP starter가 얹혀있다"는 설명을 학생에게 제공하면 이해가 빠릅니다. 다음 마이너 버전에서 `@McpTool`이라는 별도 어노테이션이 들어올 가능성이 있으므로 강의 시점에 docs 재확인.
 
 - [ ] **Step 5: 테스트 통과 확인**
 
