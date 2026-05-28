@@ -26,6 +26,7 @@ dependencyManagement {
 dependencies {
     implementation("org.springframework.ai:spring-ai-starter-mcp-server")
     implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-web")    // RestClient; web-application-type:none prevents Tomcat
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
